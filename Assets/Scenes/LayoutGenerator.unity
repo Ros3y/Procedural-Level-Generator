@@ -308,6 +308,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1496629726}
+  - component: {fileID: 1496629725}
   m_Layer: 0
   m_Name: Generator
   m_TagString: Untagged
@@ -315,6 +316,29 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &1496629725
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1496629724}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1a5221016ae3494b82ad64fbd38b967, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  layoutParameters:
+    width: 0
+    height: 0
+  roomParameters:
+    minWidth: 0
+    maxWidth: 0
+    minHeight: 0
+    maxHeight: 0
+    minQuantity: 0
+    maxQuantity: 0
+  previewRenderer: {fileID: 1616525905}
 --- !u!4 &1496629726
 Transform:
   m_ObjectHideFlags: 0
@@ -323,7 +347,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1496629724}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.11195207, y: 3.0371356, z: -0.11171627}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
