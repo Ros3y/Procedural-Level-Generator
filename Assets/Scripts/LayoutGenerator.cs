@@ -28,8 +28,26 @@ public class LayoutGenerator : MonoBehaviour
     {
         Generate();    
     }
-    
-    private void Generate()
+
+    public void Generate()
+    {
+        LayoutStructure layout = SetupLayout();
+        GenerateRooms(layout);
+        ConverToBitmap(layout);
+    }
+
+    private LayoutStructure SetupLayout()
+    {
+        LayoutStructure layout = new LayoutStructure();
+        return layout; 
+    }
+
+    private void GenerateRooms(LayoutStructure layout)
+    {
+
+    }
+
+    private void ConverToBitmap(LayoutStructure layout)
     {
         int textureWidth = 256;
         int textureHeight = 256;
