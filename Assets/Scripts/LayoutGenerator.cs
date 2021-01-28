@@ -5,7 +5,9 @@ public class LayoutGenerator : MonoBehaviour
     [System.Serializable]
     public struct LayoutParameters
     {
+        [Range(1,8192)]
         public int width;
+        [Range(1,8192)]
         public int height;
     }
     
@@ -33,7 +35,7 @@ public class LayoutGenerator : MonoBehaviour
     {
         LayoutStructure layout = SetupLayout();
         GenerateRooms(layout);
-        ConverToBitmap(layout);
+        ConvertToBitmap(layout);
     }
 
     private LayoutStructure SetupLayout()
@@ -45,7 +47,7 @@ public class LayoutGenerator : MonoBehaviour
     private void GenerateRooms(LayoutStructure layout)
     {
         int quantity = Random.Range(roomParameters.minQuantity, roomParameters.maxQuantity + 1);
-
+        
         for(int i = 0; i < quantity; i++)
         {
             int width = Random.Range(roomParameters.minWidth, roomParameters.maxWidth + 1);
@@ -55,17 +57,28 @@ public class LayoutGenerator : MonoBehaviour
             Vector3 size = new Vector3(width, 0, height);
             Vector3 position = new Vector3(x, 0, z);
             layout.AddRoom(position, size);
-    }
+        }
     }
 
-    private void ConverToBitmap(LayoutStructure layout)
+    private void ConvertToBitmap(LayoutStructure layout)
     {
-        int textureWidth = 256;
-        int textureHeight = 256;
+        int textureWidth = layoutParameters.width;
+        int textureHeight = layoutParameters.height;
         Texture2D texture = new Texture2D(textureWidth, textureHeight);
         texture.filterMode = FilterMode.Point;
-        // texture.SetPixel(100, 100, Color.red);
-        // texture.Apply();
+        for(int i = 0; i < layout.rooms.Count; i++)
+        {
+            for(float pointX = layout.rooms[i].bounds.min.x; pointX < layout.rooms[i].bounds.max.x; pointX += 1.0f)
+            {
+                for(float pointY = layout.rooms[i].bounds.min.z; pointY < layout.rooms[i].bounds.max.z; pointY += 1.0f)
+                {
+                    int x = (int)(pointX + (textureWidth/2));
+                    int y = (int)(pointY + (textureHeight/2));
+                    texture.SetPixel(x, y, Color.red);
+                }
+            }
+        }
+        texture.Apply();
         previewRenderer.material.mainTexture = texture;
 
     }
