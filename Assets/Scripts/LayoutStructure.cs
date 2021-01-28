@@ -6,8 +6,24 @@ public class LayoutStructure
     public struct Room
     {
         public Bounds bounds;
+
+        public Room(Vector3 position, Vector3 size)
+        {
+            this.bounds = new Bounds(position, size);
+        }
     }
-    private Bounds area;
-    private List<Room> rooms = new List<Room>();
     
+    public Bounds area {get; private set;}
+    public List<Room> rooms {get; private set;} = new List<Room>();
+    
+    public LayoutStructure(int width, int height)
+    {
+        this.area = new Bounds(Vector3.zero, new Vector3(width, 0, height));
+    }
+
+    public void AddRoom(Vector3 position, Vector3 size)
+    {
+        Room room = new Room(position, size);
+        rooms.Add(room);
+    }
 }

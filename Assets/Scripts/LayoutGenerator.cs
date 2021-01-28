@@ -38,13 +38,24 @@ public class LayoutGenerator : MonoBehaviour
 
     private LayoutStructure SetupLayout()
     {
-        LayoutStructure layout = new LayoutStructure();
+        LayoutStructure layout = new LayoutStructure(this.layoutParameters.width, this.layoutParameters.height); 
         return layout; 
     }
 
     private void GenerateRooms(LayoutStructure layout)
     {
+        int quantity = Random.Range(roomParameters.minQuantity, roomParameters.maxQuantity + 1);
 
+        for(int i = 0; i < quantity; i++)
+        {
+            int width = Random.Range(roomParameters.minWidth, roomParameters.maxWidth + 1);
+            int height = Random.Range(roomParameters.minHeight, roomParameters.maxHeight + 1);
+            float x = Random.Range(layout.area.min.x, layout.area.max.x);
+            float z = Random.Range(layout.area.min.z, layout.area.max.z);
+            Vector3 size = new Vector3(width, 0, height);
+            Vector3 position = new Vector3(x, 0, z);
+            layout.AddRoom(position, size);
+    }
     }
 
     private void ConverToBitmap(LayoutStructure layout)
