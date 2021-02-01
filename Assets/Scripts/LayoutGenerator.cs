@@ -53,8 +53,8 @@ public class LayoutGenerator : MonoBehaviour
         {
             int width = Random.Range(roomParameters.minWidth, roomParameters.maxWidth + 1);
             int height = Random.Range(roomParameters.minHeight, roomParameters.maxHeight + 1);
-            float x = Random.Range(layout.area.min.x, layout.area.max.x);
-            float z = Random.Range(layout.area.min.z, layout.area.max.z);
+            float x = Random.Range(layout.area.min.x + width/2, layout.area.max.x - width/2);
+            float z = Random.Range(layout.area.min.z + height/2, layout.area.max.z - height/2);
             Vector3 size = new Vector3(width, 0, height);
             Vector3 position = new Vector3(x, 0, z);
             layout.AddRoom(position, size);
