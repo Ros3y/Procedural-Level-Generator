@@ -6,10 +6,12 @@ public class LayoutStructure
     public struct Room
     {
         public Bounds bounds;
+        public Vector3 anchorPoint;
 
         public Room(Vector3 position, Vector3 size)
         {
             this.bounds = new Bounds(position, size);
+            this.anchorPoint = this.bounds.center;
         }
     }
     
