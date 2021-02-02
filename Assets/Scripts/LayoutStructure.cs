@@ -15,17 +15,23 @@ public class LayoutStructure
         }
     }
     
-    public Bounds area {get; private set;}
     public List<Room> rooms {get; private set;} = new List<Room>();
     
-    public LayoutStructure(int width, int height)
-    {
-        this.area = new Bounds(Vector3.zero, new Vector3(width, 0, height));
-    }
+    
 
     public void AddRoom(Vector3 position, Vector3 size)
     {
         Room room = new Room(position, size);
         rooms.Add(room);
+    }
+
+    public Bounds CalculateTotalBounds()
+    {
+        Bounds totalBounds = new Bounds();
+        for(int i = 0; i < rooms.Count; i++)
+        {
+            totalBounds.Encapsulate(rooms[i].bounds);
+        }
+        return totalBounds;
     }
 }
