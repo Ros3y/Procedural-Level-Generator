@@ -14,6 +14,9 @@ public class LayoutGenerator : MonoBehaviour
 
         [Range(0,360)]
         public int maxRoomToRoomDirection;
+
+        [Range(0.0f,1.0f)]
+        public float branchChance; 
     }
     
     [System.Serializable]
@@ -48,40 +51,88 @@ public class LayoutGenerator : MonoBehaviour
     private void GenerateRooms(LayoutStructure layout)
     {
         int quantity = Random.Range(roomParameters.minQuantity, roomParameters.maxQuantity + 1);
-        Vector3 previousPosition = Vector3.zero;
+        int generationAttempts = quantity;
+        LayoutStructure.Room previousRoom = layout.AddRoom(Vector3.zero, CalculateRoomSize());
+        int direction = 0;
         
-        for(int i = 0; i < quantity; i++)
+        for(int i = 1; i < generationAttempts; i++)
         {
-            
-            int width = Random.Range(roomParameters.minWidth, roomParameters.maxWidth + 1);
-            int height = Random.Range(roomParameters.minHeight, roomParameters.maxHeight + 1);
-            Vector3 size = new Vector3(width, 0, height);
-            
-            if(i == 0)
-            {
-                Vector3 position = Vector3.zero;
-                layout.AddRoom(position, size);
-                previousPosition = position;
+            bool generated = false;
+            direction = Random.Range(1,5);
 
+            
+            for(int attempts = 0; attempts < 4; attempts++)
+            {
+                Bounds bounds = CalculateRoomBounds(previousRoom, direction);
+                
+                if(!layout.DoesOverlapAnyRoom(bounds))
+                {
+                    previousRoom = layout.AddRoom(bounds);
+                    generated = true;
+                    break;
+                }
+                else if(++direction > 4)
+                {
+                    direction = 1;
+                }
             }
-            else
-            { 
-                Vector3 position = GenerateRoomPosition(previousPosition);
-                layout.AddRoom(position, size);
-                previousPosition = position;
+            
+            if(!generated)
+            {
+                generationAttempts++;
+                if(i >= 2)
+                {
+                    previousRoom = layout.rooms[Random.Range(0,layout.rooms.Count - 2)];
+                }
+                else
+                {
+                    break;
+                }
             }
+            
         }
+        Debug.Log(layout.rooms.Count);
 
     }
 
-    private Vector3 GenerateRoomPosition(Vector3 from)
+    private Bounds CalculateRoomBounds(LayoutStructure.Room room, int direction)
     {
         int distance = Random.Range(layoutParameters.minRoomToRoomDistance, layoutParameters.maxRoomToRoomDistance + 1);
-        int angle = Random.Range(layoutParameters.minRoomToRoomDirection, layoutParameters.maxRoomToRoomDirection);
-        Vector3 direction = new Vector3(Random.Range(-1.0f,1.0f), 0, Random.Range(-1.0f,1.0f)).normalized * distance;
-        Vector3 position = (from + direction);
+        Vector3 offset = Vector3.zero;
+        Vector3 position = Vector3.zero;
+        
+        switch(direction)
+        {
+            case 1:
+                offset.z = room.bounds.extents.z + distance;
+                position = (room.anchorPoint + offset);
+                break;
+            
+            case 2:
+                offset.x = room.bounds.extents.x + distance;
+                position = (room.anchorPoint + offset);
+                break;
+            
+            case 3:
+                offset.z = -room.bounds.extents.z - distance;
+                position = (room.anchorPoint + offset);
+                break;
 
-        return position;
+            case 4:
+                offset.x = -room.bounds.extents.x - distance;
+                position = (room.anchorPoint + offset);
+                break;
+        }
+  
+
+        return new Bounds(position, CalculateRoomSize());
+    }
+
+    public Vector3 CalculateRoomSize()
+    {
+        int width = Random.Range(roomParameters.minWidth, roomParameters.maxWidth + 1);
+        int height = Random.Range(roomParameters.minHeight, roomParameters.maxHeight + 1);
+        return new Vector3(width, 0, height);
     }
 
     private void ConvertToBitmap(LayoutStructure layout)
