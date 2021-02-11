@@ -50,7 +50,8 @@ public class LayoutGenerator : MonoBehaviour
     {
         int quantity = Random.Range(roomParameters.quantity.min, roomParameters.quantity.max + 1);
         int generationAttempts = quantity;
-        LayoutStructure.Room previousRoom = layout.AddRoom(Vector3.zero, CalculateRoomSize());
+        Vector3 initialSize = LayoutUtility.RandomRoomSize(roomParameters.width, roomParameters.length);
+        LayoutStructure.Room previousRoom = layout.AddRoom(Vector3.zero, initialSize);
         int direction = 0;
         
         for(int i = 1; i < generationAttempts; i++)
@@ -58,11 +59,13 @@ public class LayoutGenerator : MonoBehaviour
             bool generated = false;
             direction = Random.Range(1,5);
 
-            
             for(int attempts = 0; attempts < 4; attempts++)
             {
-                Bounds bounds = CalculateRoomBounds(previousRoom, direction);
-                
+                int distance = layoutParameters.roomToRoomDistance.RandomInclusive();
+                Vector3 position = LayoutUtility.BranchRoom(previousRoom, direction, distance);
+                Vector3 size = LayoutUtility.RandomRoomSize(roomParameters.width, roomParameters.length);
+                Bounds bounds = new Bounds(position, size);
+
                 if(!layout.DoesOverlapAnyRoom(bounds))
                 {
                     previousRoom = layout.AddRoom(bounds);
@@ -87,49 +90,7 @@ public class LayoutGenerator : MonoBehaviour
                     break;
                 }
             }
-            
         }
         Debug.Log(layout.rooms.Count);
-
-    }
-
-    private Bounds CalculateRoomBounds(LayoutStructure.Room room, int direction)
-    {
-        int distance = Random.Range(layoutParameters.roomToRoomDistance.min, layoutParameters.roomToRoomDistance.max + 1);
-        Vector3 offset = Vector3.zero;
-        Vector3 position = Vector3.zero;
-        
-        switch(direction)
-        {
-            case 1:
-                offset.z = room.bounds.extents.z + distance;
-                position = (room.anchorPoint + offset);
-                break;
-            
-            case 2:
-                offset.x = room.bounds.extents.x + distance;
-                position = (room.anchorPoint + offset);
-                break;
-            
-            case 3:
-                offset.z = -room.bounds.extents.z - distance;
-                position = (room.anchorPoint + offset);
-                break;
-
-            case 4:
-                offset.x = -room.bounds.extents.x - distance;
-                position = (room.anchorPoint + offset);
-                break;
-        }
-  
-
-        return new Bounds(position, CalculateRoomSize());
-    }
-
-    public Vector3 CalculateRoomSize()
-    {
-        int width = Random.Range(roomParameters.width.min, roomParameters.width.max + 1);
-        int height = Random.Range(roomParameters.length.min, roomParameters.length.max + 1);
-        return new Vector3(width, 0, height);
     }
 }
