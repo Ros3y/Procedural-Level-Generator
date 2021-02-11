@@ -328,22 +328,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1a5221016ae3494b82ad64fbd38b967, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  layoutParameters:
-    width: 256
-    height: 256
-    minRoomToRoomDistance: 5
-    maxRoomToRoomDistance: 30
-    minRoomToRoomDirection: 0
-    maxRoomToRoomDirection: 90
-  roomParameters:
+  previewParameters:
+    outputType: 0
     wallThickness: 1
-    minWidth: 10
-    maxWidth: 20
-    minHeight: 10
-    maxHeight: 20
-    minQuantity: 10
-    maxQuantity: 10
-  previewRenderer: {fileID: 1616525905}
+    previewRenderer: {fileID: 1616525905}
+  layoutParameters:
+    roomToRoomDistance:
+      _min: 10
+      _max: 15
+  roomParameters:
+    width:
+      _min: 10
+      _max: 20
+    length:
+      _min: 10
+      _max: 20
+    quantity:
+      _min: 25
+      _max: 25
 --- !u!4 &1496629726
 Transform:
   m_ObjectHideFlags: 0

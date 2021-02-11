@@ -78,6 +78,13 @@
         "com.unity.modules.imgui": "1.0.0"
       }
     },
+    "com.zigurous.data-structures": {
+      "version": "https://github.com/zigurous/unity-data-structures.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "e908d21231dfcdce4462e3921c8d644911bb5229"
+    },
     "com.unity.modules.ai": {
       "version": "1.0.0",
       "depth": 0,
