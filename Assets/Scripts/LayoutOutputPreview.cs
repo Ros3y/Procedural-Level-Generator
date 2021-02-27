@@ -16,6 +16,13 @@ public abstract class LayoutOutputPreview
     {
         public OutputType outputType;
         public float wallThickness;
+
+        [ConditionalShow(nameof(outputType), (int)OutputType.ThreeD)]
+        public Material previewMaterial;
+
+        [ConditionalShow(nameof(outputType), (int)OutputType.ThreeD)]
+        public bool persectiveView;
+        
         [ConditionalShow(nameof(outputType), (int)OutputType.TwoD)]
         public MeshRenderer previewRenderer;
     }

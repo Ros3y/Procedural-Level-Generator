@@ -38,7 +38,7 @@ public static class LayoutUtility
     public static Vector3 RandomRoomSize(IntRange widthRange, IntRange lengthRange)
     {
         int width = widthRange.RandomInclusive();
-        int height = lengthRange.RandomInclusive();
-        return new Vector3(width, 0, height);
+        int length = lengthRange.RandomInclusive();
+        return new Vector3(width, 10, length);
     }    
 }
