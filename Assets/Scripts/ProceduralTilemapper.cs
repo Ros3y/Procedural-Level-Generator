@@ -1,188 +1,261 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine.Tilemaps;
 using UnityEngine;
 
-namespace Zigurous.Tilemapping
+public class ProceduralTilemapper : MonoBehaviour
 {
-    [RequireComponent(typeof(Tilemap))]
-    public sealed class ProceduralTilemapper : MonoBehaviour
+    private Tilemap _tilemap;
+    public TileBase baseTile;
+    public TileMappingParameters.Parameters parameters;
+    private int _roomCount;
+    private int _roomQuantity;
+    private Dictionary<Vector2Int, bool> _units = new Dictionary<Vector2Int, bool>();
+    private List<UnitBounds> _rooms;
+    
+    private void Awake()
     {
-        public TileBase baseTile;
-        private Tilemap _tilemap;
-        private List<Bounds> _rooms;
+        _tilemap = GetComponent<Tilemap>();
+        _rooms = new List<UnitBounds>();
 
-        private void Start()
+    }
+
+    private void Start()
+    {
+        Generate();
+    }
+
+    private void Update()
+    {
+        if (parameters.regenerate)
         {
-            Initialize();
-            GenerateMap();
-            RenderMap();
-            alignCamera();
+            parameters.regenerate = false;
+            Generate();
         }
+    }
 
-        private void Initialize()
+    private void Generate()
+    {
+        _tilemap.ClearAllTiles();
+        _units.Clear();
+
+        UnitBounds centralRoom = CreateCentralRoom();
+
+        _roomCount = 1;
+        _roomQuantity = Random.Range(parameters.roomQuantityMin, parameters.roomQuantityMax);
+
+        BranchRecursively(centralRoom);
+        if(parameters.allowAdditionalConnections)
         {
-            _tilemap = GetComponent<Tilemap>();
-            _rooms = new List<Bounds>();
+            ConnectRandomRooms();
         }
+        AlignCamera();
+    }
 
-        private void GenerateMap()
-        {
-            for (int i = 0; i < 10; i++)
-            {
-                int x = Random.Range(-64, 64);
-                int y = Random.Range(-64, 64);
-                Vector3 position = new Vector3(x, y);
-                Vector3 mirroredPosition = new Vector3();
-                
-                int randomInt = Random.Range(0, 2);
-
-                if(randomInt == 0)
-                {
-                    Vector3 position2 = new Vector3(-x, y);
-                    mirroredPosition = position2;
-                }
-                
-                if(randomInt == 1)
-                {
-                    Vector3 position2 = new Vector3(x, -y);
-                    mirroredPosition = position2;
-                }
-                
-                if(randomInt == 2)
-                {
-                    Vector3 position2 = new Vector3(-x, -y);
-                    mirroredPosition = position2;
-                }
-
-                
+    private void AlignCamera()
+    {
+        Bounds totalBounds = _tilemap.localBounds;
+        Vector3 cameraPosition = new Vector3(totalBounds.center.x, totalBounds.center.y, Camera.main.transform.position.z);
+        Camera.main.transform.position = cameraPosition;
+        Camera.main.orthographicSize = Mathf.Max(totalBounds.size.x, totalBounds.size.y) / 1.618f;
+    }
 
 
-                int width = Random.Range(8, 16);
-                int length = Random.Range(8, 16);
-                Vector3 size = new Vector3(width, length);
+    private UnitBounds CreateCentralRoom()
+    {
+        Vector2Int position = Vector2Int.zero;
+        Vector2Int size = new Vector2Int(Random.Range(parameters.roomSizeMin.x, parameters.roomSizeMax.x), Random.Range(parameters.roomSizeMin.y, parameters.roomSizeMax.y));
+        size = size * parameters.centralRoomScale;
+        return CreateRoom(position, size);
+    }
 
-                _rooms.Add(new Bounds(position, size));
-                _rooms.Add(new Bounds(mirroredPosition, size));
-            }
-            int centralWidth = Random.Range(8, 16);
-            int centralLength = Random.Range(8, 16);
-            Vector3 centralSize = new Vector3(2.5f*centralWidth, 2.5f*centralLength);
-            Bounds totalBounds = CalculateTotalBounds();
-            _rooms.Add(new Bounds(totalBounds.center, centralSize));
-        }
-
-        private void RenderMap()
-        {
-            _tilemap.ClearAllTiles();
-
-            // Draw room tiles
-            foreach (Bounds room in _rooms)
-            {
-                for (int x = (int)room.min.x; x < room.max.x; x++)
-                {
-                    for (int y = (int)room.min.y; y < room.max.y; y++)
-                    {
-                        _tilemap.SetTile(new Vector3Int(x, y, 0), this.baseTile);
-                    }
-                }
-            }
-
-            ConnectAllRooms();
-
-
-        }
-        private void Connect2Rooms(Bounds roomA, Bounds roomB)
-        {
-            float distanceX = Mathf.Abs(roomA.center.x - roomB.center.x);
-            float distanceY = Mathf.Abs(roomA.center.y - roomB.center.y);
-            Vector3Int position = new Vector3Int();
-            position.x = (int)roomA.center.x;
-            position.y = (int)roomA.center.y;
-            int xDirection = (int)Mathf.Clamp(roomB.center.x - roomA.center.x, -1, 1);
-            int yDirection = (int)Mathf.Clamp(roomB.center.y - roomA.center.y, -1, 1);
+    private void BranchRecursively(UnitBounds room)
+    {
+        UnitBounds branch;
+        UnitBounds randomRoom = _rooms[Random.Range(0,_rooms.Count)];
         
-            // if(Mathf.Max(roomB.center.x, roomA.center.x) == roomB.center.x)
-            // {
-            //     xDirection = 1;
-            // }
-
-            // if(Mathf.Max(roomB.center.x, roomA.center.x) == roomA.center.x)
-            // {
-            //     xDirection = -1;
-            // }
-
-            // if(Mathf.Max(roomB.center.y, roomA.center.y) == roomB.center.y)
-            // {
-            //     yDirection = 1;
-            // }
-
-            // if(Mathf.Max(roomB.center.y, roomA.center.y) == roomA.center.y)
-            // {
-            //     yDirection = -1;
-            // }
-
-            for(int i = 0; i < distanceX; i++)
-            {
-                _tilemap.SetTile(new Vector3Int(position.x, position.y, 0), this.baseTile);
-                position.x += xDirection;
-            }
-
-            for(int i = 0; i < distanceY; i++)
-            {
-                _tilemap.SetTile(new Vector3Int(position.x, position.y, 0), this.baseTile);
-                position.y += yDirection;
-            }
-        
+        if (_roomCount++ >= _roomQuantity) {
+            return;
         }
 
-        private void ConnectAllRooms()
+        int direction = Random.Range(0, 4);
+        float chance = Random.Range(0.0f,100.0f);
+        if(chance > parameters.centralBranchChance)
         {
-            int roomCount = _rooms.Count;
-            List<Bounds> connectedRooms = new List<Bounds>();
-            List<Bounds> unconnectedRooms = new List<Bounds>();
-            int connectedRoomCount = connectedRooms.Count;
-            
-            for(int i = 0; i < roomCount - 1; i++)
-            {
-                int chance = Random.Range(0,10);
-                if(chance >= 5)
-                {
-                    Connect2Rooms(_rooms[roomCount - 1], _rooms[i]);
-                    connectedRooms.Add(_rooms[i]);
-                }
-                else
-                {
-                    unconnectedRooms.Add(_rooms[i]);
-                }
-            }
-            
-            for(int i = 0; i < unconnectedRooms.Count; i++)
-            {
-                Debug.Log(unconnectedRooms[i]);
-                Debug.Log("made it here");
-                int randomRoom = Random.Range(0,connectedRoomCount - 1);
-                Connect2Rooms(unconnectedRooms[i], connectedRooms[randomRoom]);
-            }
+            branch = BranchRoom(room, direction);  
         }
 
-        
-        private Bounds CalculateTotalBounds()
+        else
         {
-            Bounds totalBounds = new Bounds();
-            for(int i = 0; i < _rooms.Count; i++)
-            {
-                totalBounds.Encapsulate(_rooms[i]);
-            }
-            return totalBounds;
+            branch = BranchRoom(_rooms[0], direction);   
         }
-        private void alignCamera()
+        BranchRecursively(branch);
+    }
+
+    private UnitBounds BranchRoom(UnitBounds room, int direction)
+    {
+        Vector2Int size = new Vector2Int(Random.Range(parameters.roomSizeMin.x, parameters.roomSizeMax.x), Random.Range(parameters.roomSizeMin.y, parameters.roomSizeMax.y));
+        Vector2Int position = room.position;
+        Vector2Int centerOffset = size / 2;
+
+        int distance = Random.Range(parameters.roomDistanceMin, parameters.roomDistanceMax);
+        int offset = Random.Range(parameters.roomOffsetMin, parameters.roomOffsetMax);
+
+        switch (direction)
         {
-            Bounds totalBounds = CalculateTotalBounds();
-            Vector3 cameraPosition = new Vector3(totalBounds.center.x, totalBounds.center.z, -0.3f);
-            Camera.main.transform.position = cameraPosition;
-            Camera.main.orthographicSize = Mathf.Max(totalBounds.size.x, totalBounds.size.z);
+            case 0: // up
+                position.y += room.size.y + distance;
+                position.x = room.center.x + offset - centerOffset.x;
+                break;
+
+            case 1: // down
+                position.y -= size.y + distance;
+                position.x = room.center.x + offset - centerOffset.x;
+                break;
+
+            case 2: // right
+                position.x += room.size.x + distance;
+                position.y = room.center.y + offset - centerOffset.y;
+                break;
+
+            case 3: // left
+                position.x -= size.x + distance;
+                position.y = room.center.y + offset - centerOffset.y;
+                break;
         }
 
+        UnitBounds branch = CreateRoom(position, size);
+        ConnectRooms(room, branch);
+        if(parameters.symetricalBranching)
+        {
+            UnitBounds SymetricalBranch = GenerateSymetricalRoom(branch);
+            ConnectRooms(room, SymetricalBranch);
+        }
+        return branch;
+    }
+
+    private UnitBounds GenerateSymetricalRoom(UnitBounds room)
+    {
+        int x = room.center.x;
+        int y = room.center.y;
+        Vector2Int mirroredPosition = new Vector2Int(-x, y);
+
+        switch(parameters.axisOfSymetry)
+             {
+                case TileMappingParameters.axisOfSymetry.X:
+                mirroredPosition = new Vector2Int(-x, y);
+                break;
+
+                case TileMappingParameters.axisOfSymetry.Y:
+                mirroredPosition = new Vector2Int(x, -y);
+                break;
+
+                case TileMappingParameters.axisOfSymetry.Diagonal1:
+                mirroredPosition = new Vector2Int(-x, -y);
+                break;
+
+                case TileMappingParameters.axisOfSymetry.Diagonal2:
+                mirroredPosition = new Vector2Int(y, x);
+                break;
+            }
+
+        return CreateRoom(mirroredPosition, room.size);
+    }
+
+    private void ConnectRooms(UnitBounds roomA, UnitBounds roomB)
+    {
+        Vector2Int centerA = roomA.center;
+        Vector2Int centerB = roomB.center;
+
+        int centering = parameters.corridorWidth / 2;
+
+        int xMin = Mathf.Min(centerA.x, centerB.x) - centering;
+        int xMax = Mathf.Max(centerA.x, centerB.x) + centering;
+        int xDistance = xMax - xMin;
+        int xStart = centerB.x - centering;
+
+        int yMin = Mathf.Min(centerA.y, centerB.y) - centering;
+        int yMax = Mathf.Max(centerA.y, centerB.y) + centering;
+        int yDistance = yMax - yMin;
+        int yStart = centerA.y - centering;
+
+        UnitBounds corridorHorizontal = new UnitBounds(xMin, yStart, xDistance, parameters.corridorWidth);
+        UnitBounds corridorVertical = new UnitBounds(xStart, yMin, parameters.corridorWidth, yDistance);
+
+        FillUnitBounds(corridorHorizontal);
+        FillUnitBounds(corridorVertical);
+    }
+
+    private void ConnectRandomRooms()
+    {
+        List<UnitBounds> _tempRooms = _rooms;
+        int addedConnections = (int)Mathf.Floor(parameters.additionalConnections * _rooms.Count);
+        for(int i = 0; i < addedConnections - 1; i++)
+        {
+            int randomIndexA = Random.Range(0,_tempRooms.Count);
+            UnitBounds roomA = _rooms[randomIndexA];
+            _tempRooms.Remove(_rooms[randomIndexA]);
+            int randomIndexB = Random.Range(0,_tempRooms.Count);
+            UnitBounds roomB = _rooms[randomIndexB];
+            ConnectRooms(roomA, roomB);
+        }
+    }
+
+    private UnitBounds CreateRoom(Vector2Int position, Vector2Int size)
+    {
+        float chance = Random.Range(0.0f, 100.0f);
+        UnitBounds room = new UnitBounds(position, size);
+        if(chance < parameters.focalRoomChance)
+        {
+            room.size = room.size * parameters.focalRoomScale;
+        }
+        SetOccupied(room, true);
+        _rooms.Add(room);
+        FillUnitBounds(room);
+        return room;
+    }
+
+    private void SetOccupied(UnitBounds bounds, bool occupied)
+    {
+        for (int x = bounds.position.x; x < bounds.position.x + bounds.size.x; x++)
+        {
+            for (int y = bounds.position.y; y < bounds.position.y + bounds.size.y; y++)
+            {
+                Vector2Int unit = new Vector2Int(x, y);
+                _units[unit] = occupied;
+            }
+        }
+    }
+
+    private void FillUnitBounds(UnitBounds bounds)
+    {
+        BoundsInt tileBounds = UnitBoundsToTileBounds(bounds);
+        FillTileBounds(tileBounds);
+    }
+
+    private void FillTileBounds(BoundsInt bounds)
+    {
+        for (int x = bounds.min.x; x < bounds.max.x; x++)
+        {
+            for (int y = bounds.min.y; y < bounds.max.y; y++)
+            {
+                _tilemap.SetTile(new Vector3Int(x, y, 0), this.baseTile);
+            }
+        }
+    }
+
+    private BoundsInt UnitBoundsToTileBounds(UnitBounds unitBounds)
+    {
+        Vector3Int position = UnitToTile(unitBounds.position);
+        Vector3Int size = UnitToTile(unitBounds.size);
+        return new BoundsInt(position, size);
+    }
+
+    private Vector3Int UnitToTile(Vector2Int unit)
+    {
+        return new Vector3Int(
+            unit.x * parameters.unitSize.x,
+            unit.y * parameters.unitSize.y,
+            0);
     }
 
 }

@@ -329,7 +329,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   previewParameters:
-    outputType: 1
+    outputType: 0
     wallThickness: 1
     previewMaterial: {fileID: 2100000, guid: 5f36ae2f5fbb76e44823e02128e65d1b, type: 2}
     persectiveView: 1
